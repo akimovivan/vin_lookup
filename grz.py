@@ -4,9 +4,20 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 import time 
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from typing import Optional, List
 
 URL = 'https://vin01.ru/index.php'
-def avto_info(gos_number, url=URL):
+def avto_info(gos_number: str, url: str = URL) -> Optional[List[str]]:
+    """
+    Retrieves information about a vehicle given its GOS number.
+
+    Args:
+        gos_number (str): The GOS number of the vehicle.
+        url (str): The URL of the web page to scrape.
+
+    Returns:
+        Optional[List[str]]: A list of VIN numbers if found, None otherwise.
+    """
     options = FirefoxOptions()
     options.add_argument("--headless")
     driver = webdriver.Firefox(options=options)
@@ -29,7 +40,7 @@ def avto_info(gos_number, url=URL):
             result.append(child.text)
         return result
     else:
-        return driver.find_element(by=By.ID, value=ids['error']).text
+        return None
 
 
 
