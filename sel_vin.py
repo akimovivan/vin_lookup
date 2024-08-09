@@ -6,7 +6,11 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from typing import Optional, List
 
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 URL = 'https://vin01.ru/index.php'
+
 def avto_info(gos_number: str, url: str = URL) -> Optional[List[str]]:
     """
     Retrieves information about a vehicle given its GOS number.
@@ -18,30 +22,26 @@ def avto_info(gos_number: str, url: str = URL) -> Optional[List[str]]:
     Returns:
         Optional[List[str]]: A list of VIN numbers if found, None otherwise.
     """
+    IDS = {
+            'input': 'num',
+            'button': 'searchByGosNumberButton',
+            'result': 'vinNumbers',
+            'error': 'noMatchVin'
+        }
     options = FirefoxOptions()
     options.add_argument("--headless")
     driver = webdriver.Firefox(options=options)
-    ids = {
-        'input': 'num',
-        'button': 'searchByGosNumberButton',
-        'result': 'vinNumbers',
-        'error': 'noMatchVin'
-    }
-
-    driver.get(url)
-    time.sleep(5)
-    driver.find_element(by=By.ID, value=ids['input']).send_keys(gos_number)
-    driver.find_element(by=By.ID, value=ids['button']).click()
-    time.sleep(5)
-    children = driver.find_elements(by=By.ID, value=ids['result'])
-    result = []
-    if children:
-        for child in children:
-            result.append(child.text)
-        return result
-    else:
-        return None
-
+    
+    with webdriver.Firefox(options=options) as driver:
+        driver.get(url)
+        driver.find_element(by=By.ID, value=IDS['input']).send_keys(gos_number)
+        driver.find_element(by=By.ID, value=IDS['button']).click()
+        try:
+            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, IDS['result'])))
+            children = driver.find_elements(by=By.ID, value=IDS['result'])
+        except selenium.common.exceptions.TimeoutException:
+            return None
+        return [child.text for child in children] 
 
 
 if __name__ == "__main__":
